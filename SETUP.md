@@ -9,12 +9,13 @@
 
 2. **Cuenta Resend** — https://resend.com → API Keys → New. Anota la `RESEND_API_KEY` (empieza con `re_`).
 
-3. **Node.js** instalado (cualquier 18+).
+3. **Node.js** instalado (20+).
 
-4. **CLI de Supabase** para deployar la Edge Function:
+4. **CLI de Supabase** para deployar la Edge Function. El CLI ya no soporta `npm install -g`; usa Homebrew (macOS/Linux):
    ```bash
-   npm install -g supabase
+   brew install supabase/tap/supabase
    ```
+   En Windows: descarga el binario desde https://github.com/supabase/cli/releases
 
 5. Tu archivo `escapadas-index.json` (el que ya tienes).
 
@@ -28,27 +29,25 @@
 Ahora los ~250 destinos. Usa el script Node:
 
 ```bash
-cd album-mexico
 npm init -y
-npm install @supabase/supabase-js
+npm install @supabase/supabase-js ws   # ws es necesario en Node 20 (sin WebSocket nativo)
 
 cat > .env <<EOF
 SUPABASE_URL=https://TU_PROYECTO.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGc...   # service_role, NO anon
 EOF
 
-node --env-file=.env seed-places.mjs /ruta/a/escapadas-index.json
+node --env-file=.env seed-places.mjs escapadas-index.json
 ```
 
-Debería imprimir:
+Debería imprimir algo como:
 ```
-Encontrados 250 destinos en el JSON
+Encontrados 310 destinos en el JSON
 Estados en DB: 32
-  100/250 subidos
-  200/250 subidos
-  250/250 subidos
-Listo. 250 destinos cargados.
-Pueblos Mágicos: 135
+  100/310 subidos
+  ...
+Listo. 310 destinos cargados.
+Pueblos Mágicos: 177
 ```
 
 ## Paso 2 — Configurar Auth y desplegar la Edge Function
@@ -56,25 +55,29 @@ Pueblos Mágicos: 135
 En el dashboard de Supabase:
 
 1. **Authentication → Providers → Email** — actívalo. Desactiva "Confirm email" (no lo necesitamos, magic link es la confirmación).
-2. **Authentication → URL Configuration** — agrega tu(s) Site URL: localhost para dev (`http://localhost:5173`) y producción cuando exista.
+2. **Authentication → URL Configuration** — agrega en **Redirect URLs**:
+   - `http://localhost:5173/album-mexico.html` (dev)
+   - Tu URL de producción cuando exista (ej. `https://tu-album.com/album-mexico.html`)
 
 Deploy de la Edge Function:
 
 ```bash
-cd album-mexico
 supabase login                           # abre el browser
-supabase link --project-ref TU_PROYECTO  # del URL del dashboard
+supabase link --project-ref TU_PROYECTO  # los primeros chars del URL del dashboard
 supabase functions deploy send-magic-link --no-verify-jwt
 ```
 
-Guarda los secretos de la función:
+Guarda todos los secretos de la función en un solo comando:
 
 ```bash
-supabase secrets set RESEND_API_KEY=re_TU_KEY_RESEND
-supabase secrets set REDIRECT_URL=http://localhost:5173    # cámbialo en producción
-supabase secrets set FROM_ADDRESS=onboarding@resend.dev    # sandbox para arrancar
-supabase secrets set FROM_NAME='Álbum México'
+supabase secrets set \
+  RESEND_API_KEY=re_TU_KEY_RESEND \
+  REDIRECT_URL=http://localhost:5173/album-mexico.html \
+  FROM_ADDRESS=onboarding@resend.dev \
+  FROM_NAME='Álbum México'
 ```
+
+> **Importante:** `REDIRECT_URL` debe apuntar al HTML exacto (`/album-mexico.html`), no solo al root del servidor — de lo contrario el magic link redirige a un directorio vacío.
 
 > **Importante con `onboarding@resend.dev`**: ese dominio sandbox de Resend **solo manda correos al email registrado en tu cuenta Resend**. Para mandar a cualquier persona, tienes que verificar un dominio propio en Resend → Domains. Mientras pruebas tú mismo, funciona.
 
