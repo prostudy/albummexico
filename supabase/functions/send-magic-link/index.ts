@@ -32,7 +32,7 @@ const FROM_NAME      = Deno.env.get('FROM_NAME')    || 'Álbum México'
 
 // CORS
 const corsHeaders = {
-  'Access-Control-Allow-Origin':  '*',     // restringe a tu dominio en producción
+  'Access-Control-Allow-Origin':  'https://albummexico.pages.dev',     // restringe a tu dominio en producción
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
