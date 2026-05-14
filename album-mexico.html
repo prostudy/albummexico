@@ -384,7 +384,7 @@
         <div class="progress-row">
           <div class="progress-label">Tu <em>México</em></div>
           <div class="progress-stats">
-            <b>{{ visitedCount }}</b> visitados · <b>{{ wantedCount }}</b> en lista · <b>{{ totalPlaces }}</b> total
+            <b>{{ stamped }}</b> visitados · <b>{{ wantedCount }}</b> en lista · <b>{{ totalPlaces }}</b> total
           </div>
         </div>
         <div class="bar">
@@ -781,13 +781,14 @@ createApp({
       // Decidir el nuevo estado
       let next = null
       if (target === 'wanted')  next = current === 'wanted'  ? null : 'wanted'
-      if (target === 'visited') next = (current === 'visited' || current === 'loved') ? null : 'visited'
+      if (target === 'visited') next = current === 'visited'  ? null : 'visited'   // loved → visited (no eliminar)
       if (target === 'loved')   next = current === 'loved'   ? 'visited' : 'loved'    // unlove → visited
 
       // Persistir
       if (user.value) {
         if (next === null) {
-          await sb.from('user_place_states').delete().eq('user_id', user.value.id).eq('place_id', id)
+          const { error } = await sb.from('user_place_states').delete().eq('user_id', user.value.id).eq('place_id', id)
+          if (error) { console.error('Error al eliminar estado:', error); showToast('No se pudo guardar el cambio'); return }
           delete userStates[id]
         } else {
           const row = {
@@ -796,7 +797,8 @@ createApp({
             state:    next,
             visited_at: (next === 'visited' || next === 'loved') ? new Date().toISOString() : null,
           }
-          await sb.from('user_place_states').upsert(row, { onConflict: 'user_id,place_id' })
+          const { error } = await sb.from('user_place_states').upsert(row, { onConflict: 'user_id,place_id' })
+          if (error) { console.error('Error al guardar estado:', error); showToast('No se pudo guardar el cambio'); return }
           userStates[id] = { state: next, visited_at: row.visited_at }
         }
       } else {
@@ -811,7 +813,7 @@ createApp({
       // Efectos visuales
       if (next === 'visited' || next === 'loved') {
         burstConfetti(ev, next === 'loved' ? ['#C9A55C','#B23A2E'] : ['#B23A2E','#C9A55C','#2E6E8C','#4A7C3F'])
-        const v = visitedCount.value
+        const v = stamped.value
         if (v > 0 && v % 5 === 0) {
           showToast(`¡${v} lugares visitados! 🎉`)
         }
@@ -905,10 +907,9 @@ createApp({
 
     // ─── Computed ─────────────────────────────────────────────────
     const totalPlaces = computed(() => places.value.length)
-    const totalMarked = computed(() => visitedCount.value + wantedCount.value)
     const visitedCount = computed(() => {
-      if (user.value) return Object.values(userStates).filter(s => s.state === 'visited' || s.state === 'loved').length
-      return anonState.visited.length + anonState.loved.length
+      if (user.value) return Object.values(userStates).filter(s => s.state === 'visited').length
+      return anonState.visited.length
     })
     const wantedCount = computed(() => {
       if (user.value) return Object.values(userStates).filter(s => s.state === 'wanted').length
@@ -918,9 +919,11 @@ createApp({
       if (user.value) return Object.values(userStates).filter(s => s.state === 'loved').length
       return anonState.loved.length
     })
-    const unmarkedCount = computed(() => totalPlaces.value - visitedCount.value - wantedCount.value)
+    const stamped = computed(() => visitedCount.value + lovedCount.value)
+    const totalMarked = computed(() => stamped.value + wantedCount.value)
+    const unmarkedCount = computed(() => totalPlaces.value - stamped.value - wantedCount.value)
     const progressPct = computed(() =>
-      totalPlaces.value === 0 ? 0 : Math.round(visitedCount.value / totalPlaces.value * 100)
+      totalPlaces.value === 0 ? 0 : Math.round(stamped.value / totalPlaces.value * 100)
     )
     const userInitials = computed(() => {
       if (!user.value?.email) return '?'
@@ -1038,7 +1041,7 @@ createApp({
     return {
       loading, user, userInitials,
       states, places, viewMode, filter,
-      totalPlaces, totalMarked, visitedCount, wantedCount, lovedCount, unmarkedCount,
+      totalPlaces, totalMarked, stamped, visitedCount, wantedCount, lovedCount, unmarkedCount,
       progressPct, statesWithPlaces, placesByState, placesByRegion, regionsList,
       pmPlaces, pmVisited, filteredPlaces,
       stateProgress, isStateComplete, regionProgress,
