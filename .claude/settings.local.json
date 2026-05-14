@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase --version)",
+      "Bash(npm install *)",
+      "Bash(brew install *)",
+      "Bash(npm init *)",
+      "Bash(node *)",
+      "Bash(supabase link *)",
+      "Bash(SUPABASE_ACCESS_TOKEN=c68feb67 supabase link *)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sb_publishable_2i0zA-Qdm2o8gdmcdtlDSQ_g-ZKzL97 supabase link *)",
+      "Bash(supabase functions *)",
+      "Bash(supabase secrets *)"
+    ]
+  }
+}
