@@ -10,7 +10,17 @@
       "Bash(SUPABASE_ACCESS_TOKEN=c68feb67 supabase link *)",
       "Bash(SUPABASE_ACCESS_TOKEN=sb_publishable_2i0zA-Qdm2o8gdmcdtlDSQ_g-ZKzL97 supabase link *)",
       "Bash(supabase functions *)",
-      "Bash(supabase secrets *)"
+      "Bash(supabase secrets *)",
+      "Bash(awk '/^const \\\\{ createApp/,/^}\\).mount/' /Applications/MAMP/htdocs/album_cdmx/album-mexico.html)",
+      "WebFetch(domain:mundial.guru)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/VictorCazanave/svg-maps/master/packages/mexico/mexico.svg\" -o /tmp/mexico.svg)",
+      "Read(//tmp/**)",
+      "Bash(python3 *)",
+      "Bash(python3 -m http.server 5173)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/album-mexico.html)"
     ]
   }
 }
