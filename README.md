@@ -49,35 +49,83 @@ Ver [SETUP.md](SETUP.md) para crear Supabase, sembrar la base de datos y deploya
 
 ---
 
-## Deploy a Cloudflare Pages
+## Desarrollo local
 
-### Opción A — GitHub (recomendado)
+### Cómo correr el proyecto localmente
 
-1. Sube el repo a GitHub (solo necesitas `album-mexico.html`).
-2. En [Cloudflare Pages](https://pages.cloudflare.com) → Create project → Connect to Git.
-3. Selecciona el repo. Configuración del build:
-   - **Framework preset:** None
-   - **Build command:** *(dejar vacío)*
-   - **Output directory:** `.` (punto)
-4. Deploy. Cloudflare te da un dominio `*.pages.dev` inmediatamente.
+El app es un HTML estático — no necesita servidor Node ni build step. Sirve la carpeta del proyecto con cualquier servidor local:
 
-### Opción B — Drop & Deploy (más rápido para probar)
-
-1. En Cloudflare Pages → Create project → Upload assets.
-2. Arrastra `album-mexico.html`. Renómbralo a `index.html` antes de subir para que sea la raíz.
-3. Listo, tienes URL en 30 segundos.
-
-### Después del primer deploy
-
-Actualiza los secretos de Supabase con la URL real:
-
-```bash
-supabase secrets set \
-  REDIRECT_URL=https://tu-album.pages.dev/album-mexico.html \
-  FROM_ADDRESS=hola@tu-dominio.com
+**Con MAMP (configuración actual):**
+```
+http://localhost:8888/album_cdmx/index.html
 ```
 
-Y en Supabase → Authentication → URL Configuration agrega tu URL de Cloudflare en **Redirect URLs**.
+**Con Python (alternativa sin instalar nada):**
+```bash
+python3 -m http.server 5173
+# abre http://localhost:5173/index.html
+```
+
+### Magic link en desarrollo local
+
+La Edge Function detecta automáticamente desde qué URL se llama y ajusta el `redirectTo` del magic link. No hay que cambiar ningún secret al trabajar local.
+
+Orígenes configurados en `supabase/functions/send-magic-link/index.ts`:
+
+| Entorno | URL del sitio | Magic link redirige a |
+|---|---|---|
+| MAMP local | `http://localhost:8888` | `http://localhost:8888/album_cdmx/index.html` |
+| Vite / dev server | `http://localhost:5173` | `http://localhost:5173/index.html` |
+| Producción | `https://albummexico.pages.dev` | `https://albummexico.pages.dev/index.html` |
+
+Para que Supabase acepte los redirects locales, agrega estas URLs en:  
+**Supabase → Authentication → URL Configuration → Redirect URLs:**
+```
+http://localhost:8888/album_cdmx/index.html
+http://localhost:5173/index.html
+https://albummexico.pages.dev/index.html
+```
+
+Si cambias de puerto o ruta local, edita el objeto `ORIGINS` en la Edge Function y vuelve a hacer deploy:
+```bash
+supabase functions deploy send-magic-link --no-verify-jwt
+```
+
+---
+
+## Deploy a Cloudflare Pages
+
+> **Sitio en producción:** `https://albummexico.pages.dev/index.html`
+
+### Cómo se hizo (drop & deploy)
+
+El proyecto se subió directamente como archivo estático, sin conectar GitHub ni configurar build commands. Pasos exactos:
+
+1. Dashboard de Cloudflare → **Workers & Pages** → **Create application**
+2. En la pantalla "Ship something new" → **Upload your static files**
+   - ⚠️ Si no ves esa opción, busca al fondo de la pantalla el link **"Looking to deploy Pages? Get started"**
+   - No usar "Continue with GitHub" desde esa pantalla — crea un proyecto Workers, no Pages
+3. El archivo en el repo se llama `album-mexico.html` — **renombrarlo a `index.html`** antes de subir
+   - Sin este renombre, la raíz `/` devuelve 404
+4. Arrastrar `index.html` al uploader → **Deploy site**
+5. En ~30 segundos el sitio queda live en `https://albummexico.pages.dev`
+
+### Para futuros deploys (cuando cambies el HTML)
+
+1. Renombrar `album-mexico.html` → `index.html`
+2. Cloudflare Pages → proyecto `albummexico` → **Create new deployment**
+3. Arrastrar el nuevo `index.html`
+
+### Opción alternativa — GitHub (para deploys automáticos)
+
+Si en el futuro quieres que cada push a `main` haga deploy automático:
+
+1. Workers & Pages → Create application → **Pages** → **Connect to Git**
+2. Selecciona el repo. Configuración:
+   - **Framework preset:** None
+   - **Build command:** *(vacío)*
+   - **Build output directory:** `.`
+3. Cloudflare detecta el `index.html` en la raíz y lo sirve automáticamente.
 
 ---
 

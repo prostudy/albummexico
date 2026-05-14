@@ -26,21 +26,32 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL   = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY    = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const REDIRECT_URL   = Deno.env.get('REDIRECT_URL') || 'http://localhost:5173'
 const FROM_ADDRESS   = Deno.env.get('FROM_ADDRESS') || 'onboarding@resend.dev'
 const FROM_NAME      = Deno.env.get('FROM_NAME')    || 'Álbum México'
 
-// CORS
-const corsHeaders = {
-  'Access-Control-Allow-Origin':  'https://albummexico.pages.dev',     // restringe a tu dominio en producción
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// Mapa origen → URL de redirect del magic link
+// El Origin HTTP nunca incluye ruta, solo esquema+host+puerto.
+// Ajusta la ruta de cada entrada según dónde sirves el HTML localmente.
+const ORIGINS: Record<string, string> = {
+  'https://albummexico.pages.dev': 'https://albummexico.pages.dev/index.html',
+  'http://localhost:5173':         'http://localhost:5173/index.html',
+  'http://localhost:8888':         'http://localhost:8888/album_cdmx/index.html',
+}
+const DEFAULT_ORIGIN = 'https://albummexico.pages.dev'
+
+function corsHeaders(origin: string) {
+  const allowed = origin in ORIGINS ? origin : DEFAULT_ORIGIN
+  return {
+    'Access-Control-Allow-Origin':  allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  }
 }
 
-const json = (body: unknown, status = 200) =>
+const json = (body: unknown, status = 200, origin = '') =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
   })
 
 const isValidEmail = (s: string) =>
@@ -114,30 +125,33 @@ const emailHTML = (magicLink: string, email: string) => `
 
 // ── Handler ──────────────────────────────────────────────────────────
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  if (req.method !== 'POST')    return json({ error: 'method_not_allowed' }, 405)
+  const origin = req.headers.get('origin') || ''
+  const redirectTo = ORIGINS[origin] ?? ORIGINS[DEFAULT_ORIGIN]
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) })
+  if (req.method !== 'POST')    return json({ error: 'method_not_allowed' }, 405, origin)
 
   let body: { email?: string }
   try { body = await req.json() }
-  catch { return json({ error: 'invalid_json' }, 400) }
+  catch { return json({ error: 'invalid_json' }, 400, origin) }
 
   const email = (body.email || '').trim().toLowerCase()
-  if (!email || !isValidEmail(email)) return json({ error: 'invalid_email' }, 400)
+  if (!email || !isValidEmail(email)) return json({ error: 'invalid_email' }, 400, origin)
 
   // Genera el magic link sin que Supabase lo envíe
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
   const { data, error } = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
-    options: { redirectTo: REDIRECT_URL },
+    options: { redirectTo },
   })
   if (error) {
     console.error('generateLink error:', error)
-    return json({ error: 'could_not_generate_link' }, 500)
+    return json({ error: 'could_not_generate_link' }, 500, origin)
   }
 
   const magicLink = data.properties?.action_link
-  if (!magicLink) return json({ error: 'no_link_returned' }, 500)
+  if (!magicLink) return json({ error: 'no_link_returned' }, 500, origin)
 
   // Manda el correo con Resend
   const resendRes = await fetch('https://api.resend.com/emails', {
@@ -157,8 +171,8 @@ serve(async (req) => {
   if (!resendRes.ok) {
     const errText = await resendRes.text()
     console.error('Resend error:', errText)
-    return json({ error: 'resend_failed', detail: errText }, 502)
+    return json({ error: 'resend_failed', detail: errText }, 502, origin)
   }
 
-  return json({ ok: true })
+  return json({ ok: true }, 200, origin)
 })
