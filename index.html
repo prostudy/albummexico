@@ -97,9 +97,25 @@
   .view-toggle button {
     flex: 1; min-width: 0; border: 0; background: transparent;
     padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ink-soft);
-    white-space: nowrap;
+    white-space: nowrap; cursor: pointer;
   }
   .view-toggle button.active { background: var(--ink); color: var(--surface); }
+  @media (max-width: 600px) {
+    .view-toggle {
+      background: transparent; border: none; border-radius: 0;
+      margin: 4px -16px 16px; padding: 0 16px;
+      overflow-x: auto; scrollbar-width: none; gap: 6px;
+    }
+    .view-toggle::-webkit-scrollbar { display: none; }
+    .view-toggle button {
+      flex: 0 0 auto; font-size: 12px; padding: 7px 14px;
+      border: 1px solid var(--line); background: var(--surface);
+      border-radius: 999px; color: var(--ink-soft);
+    }
+    .view-toggle button.active {
+      background: var(--ink); color: var(--surface); border-color: var(--ink);
+    }
+  }
 
   /* ─── FILTERS ─── */
   .filters {
