@@ -33,11 +33,12 @@ const FROM_NAME      = Deno.env.get('FROM_NAME')    || 'Álbum México'
 // El Origin HTTP nunca incluye ruta, solo esquema+host+puerto.
 // Ajusta la ruta de cada entrada según dónde sirves el HTML localmente.
 const ORIGINS: Record<string, string> = {
+  'https://yafui.guru':            'https://yafui.guru/index.html',
   'https://albummexico.pages.dev': 'https://albummexico.pages.dev/index.html',
   'http://localhost:5173':         'http://localhost:5173/index.html',
   'http://localhost:8888':         'http://localhost:8888/album_cdmx/index.html',
 }
-const DEFAULT_ORIGIN = 'https://albummexico.pages.dev'
+const DEFAULT_ORIGIN = 'https://yafui.guru'
 
 function corsHeaders(origin: string) {
   const allowed = origin in ORIGINS ? origin : DEFAULT_ORIGIN

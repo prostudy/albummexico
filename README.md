@@ -76,13 +76,14 @@ Orígenes configurados en `supabase/functions/send-magic-link/index.ts`:
 |---|---|---|
 | MAMP local | `http://localhost:8888` | `http://localhost:8888/album_cdmx/index.html` |
 | Vite / dev server | `http://localhost:5173` | `http://localhost:5173/index.html` |
-| Producción | `https://albummexico.pages.dev` | `https://albummexico.pages.dev/index.html` |
+| Producción | `https://yafui.guru` | `https://yafui.guru/index.html` |
 
 Para que Supabase acepte los redirects locales, agrega estas URLs en:  
 **Supabase → Authentication → URL Configuration → Redirect URLs:**
 ```
 http://localhost:8888/album_cdmx/index.html
 http://localhost:5173/index.html
+https://yafui.guru/index.html
 https://albummexico.pages.dev/index.html
 ```
 
@@ -95,7 +96,7 @@ supabase functions deploy send-magic-link --no-verify-jwt
 
 ## Deploy a Cloudflare Pages
 
-> **Sitio en producción:** `https://albummexico.pages.dev/index.html`
+> **Sitio en producción:** `https://yafui.guru`
 
 ### Cómo se hizo (drop & deploy)
 
@@ -108,7 +109,7 @@ El proyecto se subió directamente como archivo estático, sin conectar GitHub n
 3. El archivo en el repo se llama `album-mexico.html` — **renombrarlo a `index.html`** antes de subir
    - Sin este renombre, la raíz `/` devuelve 404
 4. Arrastrar `index.html` al uploader → **Deploy site**
-5. En ~30 segundos el sitio queda live en `https://albummexico.pages.dev`
+5. En ~30 segundos el sitio queda live en `https://albummexico.pages.dev` (custom domain: `https://yafui.guru`)
 
 ### Para futuros deploys (cuando cambies el HTML)
 
@@ -200,22 +201,22 @@ Abre tu app en Cloudflare Pages. Las imágenes deben cargar desde `pub-xxxx.r2.d
 
 ### Para el sitio
 
-En Cloudflare Pages → Custom domains → agrega `albummexico.com` (o el que tengas). Si el dominio está en Cloudflare, se configura solo. Si está en otro registrador, agrega el CNAME que te indica.
+En Cloudflare Pages → Custom domains → agrega `yafui.guru`. Si el dominio está en Cloudflare, se configura solo. Si está en otro registrador, agrega el CNAME que te indica.
 
 ### Para las imágenes en R2
 
-En R2 → tu bucket → Settings → Custom domain. Agrega `img.albummexico.com`. Cloudflare crea el registro DNS automáticamente si el dominio está en tu cuenta.
+En R2 → tu bucket → Settings → Custom domain. Agrega `img.yafui.guru`. Cloudflare crea el registro DNS automáticamente si el dominio está en tu cuenta.
 
 Actualiza `R2_PUBLIC_URL` en `.env` y vuelve a correr el script de migración para actualizar los URLs en Supabase:
 ```bash
-R2_PUBLIC_URL=https://img.albummexico.com node --env-file=.env migrate-images-r2.mjs
+R2_PUBLIC_URL=https://img.yafui.guru node --env-file=.env migrate-images-r2.mjs
 ```
 
 ### Para los correos
 
 En Resend → Domains → Add domain. Agrega los 3 registros DNS (SPF, DKIM). Luego:
 ```bash
-supabase secrets set FROM_ADDRESS=hola@albummexico.com
+supabase secrets set FROM_ADDRESS=hola@yafui.guru
 ```
 
 ---
