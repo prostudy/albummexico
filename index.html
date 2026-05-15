@@ -500,6 +500,103 @@
     .ranking-avatar { width: 28px; height: 28px; font-size: 11px; }
     .ranking-handle { font-size: 12px; }
   }
+  /* ─── STATS GLOBALES ─── */
+  .stats-overview {
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 12px; margin: 32px 0 24px; overflow: hidden;
+  }
+  .stats-overview-title {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .stats-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  }
+  .stats-card {
+    padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 5px;
+    border-right: 1px solid var(--line);
+  }
+  .stats-card:last-child { border-right: 0; }
+  .stats-card-label {
+    font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .stats-card-name {
+    font-family: var(--display); font-size: 15px; font-weight: 600; line-height: 1.2;
+  }
+  .stats-card-count { font-size: 12px; color: var(--muted); }
+  .stats-card-count b { color: var(--ink); font-weight: 700; }
+  .stats-card-icon { font-size: 18px; margin-bottom: 2px; }
+  /* ─── STATE TABLES ─── */
+  .stats-section-title {
+    font-family: var(--display); font-size: 18px; font-weight: 500;
+    letter-spacing: -.01em; margin: 0 0 14px;
+  }
+  .stats-section-title em { color: var(--brick); font-style: italic; }
+  .state-stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 0 0 32px;
+  }
+  .state-stats-box {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden;
+  }
+  .state-stats-box-title {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 10px 12px;
+    border-bottom: 1px solid var(--line); display: flex;
+    align-items: center; justify-content: space-between;
+  }
+  .state-stats-box-icon { font-size: 14px; letter-spacing: 0; text-transform: none; }
+  .state-stat-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-bottom: 1px solid var(--line);
+  }
+  .state-stat-row:last-child { border-bottom: 0; }
+  .state-stat-pos {
+    font-family: var(--display); font-size: 12px; font-weight: 600;
+    color: var(--muted); width: 18px; flex-shrink: 0; text-align: center;
+  }
+  .state-stat-name { flex: 1; font-size: 13px; font-weight: 600; min-width: 0; }
+  .state-stat-clave {
+    font-size: 10px; letter-spacing: .06em; color: var(--muted);
+    background: var(--surface-2); border-radius: 4px; padding: 2px 5px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .state-stat-count { font-size: 13px; font-weight: 700; width: 30px; text-align: right; flex-shrink: 0; }
+  .state-stat-count.wanted  { color: var(--gold); }
+  .state-stat-count.visited { color: var(--ink); }
+  .state-stat-count.loved   { color: var(--brick); }
+  /* ─── DESTINOS ESTRELLA ─── */
+  .estrella-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .estrella-table th {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 8px 10px;
+    text-align: left; border-bottom: 2px solid var(--line);
+  }
+  .estrella-table th:not(:first-child):not(:nth-child(2)) { text-align: center; }
+  .estrella-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .estrella-table td:not(:first-child):not(:nth-child(2)) { text-align: center; }
+  .estrella-table tr:last-child td { border-bottom: 0; }
+  .estrella-table tbody tr { transition: background .15s; }
+  .estrella-table tbody tr:hover { background: var(--surface-2); }
+  .estrella-place-name { font-size: 14px; font-weight: 600; }
+  .estrella-state { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .estrella-pm {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    background: var(--gold); color: #fff; border-radius: 3px;
+    padding: 1px 4px; vertical-align: middle; margin-left: 4px;
+  }
+  .estrella-count { font-size: 14px; font-weight: 700; }
+  .estrella-count.loved   { color: var(--brick); }
+  .estrella-count.visited { color: var(--ink); }
+  .estrella-count.wanted  { color: var(--gold); }
+  @media (max-width: 700px) {
+    .stats-cards { grid-template-columns: repeat(2, 1fr); }
+    .stats-card { border-bottom: 1px solid var(--line); }
+    .state-stats-grid { grid-template-columns: 1fr; }
+    .estrella-table th, .estrella-table td { padding: 7px 6px; font-size: 12px; }
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
 </head>
@@ -564,7 +661,7 @@
         <button :class="{active: viewMode==='regions'}"  @click="viewMode='regions'">Por región</button>
         <button :class="{active: viewMode==='all'}"      @click="viewMode='all'">Todo</button>
         <button :class="{active: viewMode==='map'}"      @click="viewMode='map'">Mapa</button>
-        <button :class="{active: viewMode==='ranking'}" @click="viewMode='ranking'; loadRanking()">Ranking</button>
+        <button :class="{active: viewMode==='ranking'}" @click="viewMode='ranking'; loadRanking(); loadStats()">Ranking</button>
       </div>
 
       <!-- State filters (when in "all" mode) -->
@@ -801,6 +898,122 @@
         <div v-else class="ranking-empty">
           Aún no hay viajeros con lugares marcados.
         </div>
+
+        <!-- ─── Overview global ─── -->
+        <div v-if="statsData.states.length" class="stats-overview">
+          <div class="stats-overview-title">Estadísticas</div>
+          <div class="stats-cards">
+            <div class="stats-card">
+              <div class="stats-card-label">Estado más deseado</div>
+              <div class="stats-card-name">{{ statHighlight.mostWanted?.state_name }}</div>
+              <div class="stats-card-count"><b>{{ statHighlight.mostWanted?.wanted_count }}</b> quiero ir</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-card-label">Estado más visitado</div>
+              <div class="stats-card-name">{{ statHighlight.mostVisited?.state_name }}</div>
+              <div class="stats-card-count"><b>{{ statHighlight.mostVisited?.visited_count }}</b> ya fui</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-card-label">Estado más amado</div>
+              <div class="stats-card-name">{{ statHighlight.mostLoved?.state_name }}</div>
+              <div class="stats-card-count"><b>{{ statHighlight.mostLoved?.loved_count }}</b> la amé</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-card-label">Destino estrella</div>
+              <div class="stats-card-name">{{ statHighlight.starPlace?.place_name }}</div>
+              <div class="stats-card-count"><b>{{ statHighlight.starPlace?.loved_count }}</b> la amaron</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Tablas por estado ─── -->
+        <div v-if="statsData.states.length" style="margin: 0 0 10px;">
+          <p class="stats-section-title">Ranking de <em>estados</em></p>
+          <div class="state-stats-grid">
+
+            <!-- Por quiero ir -->
+            <div class="state-stats-box">
+              <div class="state-stats-box-title">
+                Más deseados
+                <span class="state-stats-box-icon">👁</span>
+              </div>
+              <div v-for="(s, i) in statesByWanted" :key="s.state_id" class="state-stat-row">
+                <span class="state-stat-pos">{{ i + 1 }}</span>
+                <span class="state-stat-name">{{ s.state_name }}</span>
+                <span class="state-stat-clave">{{ s.state_clave }}</span>
+                <span class="state-stat-count wanted">{{ s.wanted_count }}</span>
+              </div>
+            </div>
+
+            <!-- Por ya fui -->
+            <div class="state-stats-box">
+              <div class="state-stats-box-title">
+                Más visitados
+                <span class="state-stats-box-icon">✓</span>
+              </div>
+              <div v-for="(s, i) in statesByVisited" :key="s.state_id" class="state-stat-row">
+                <span class="state-stat-pos">{{ i + 1 }}</span>
+                <span class="state-stat-name">{{ s.state_name }}</span>
+                <span class="state-stat-clave">{{ s.state_clave }}</span>
+                <span class="state-stat-count visited">{{ s.visited_count }}</span>
+              </div>
+            </div>
+
+            <!-- Por la amé -->
+            <div class="state-stats-box">
+              <div class="state-stats-box-title">
+                Más amados
+                <span class="state-stats-box-icon">★</span>
+              </div>
+              <div v-for="(s, i) in statesByLoved" :key="s.state_id" class="state-stat-row">
+                <span class="state-stat-pos">{{ i + 1 }}</span>
+                <span class="state-stat-name">{{ s.state_name }}</span>
+                <span class="state-stat-clave">{{ s.state_clave }}</span>
+                <span class="state-stat-count loved">{{ s.loved_count }}</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ─── Destinos Estrella ─── -->
+        <div v-if="statsData.places.length" style="margin: 0 0 40px;">
+          <p class="stats-section-title">Destinos <em>estrella</em></p>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">Los destinos más marcados como &ldquo;La amé&rdquo; entre todos los viajeros.</p>
+          <table class="estrella-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Destino</th>
+                <th>La amé</th>
+                <th>Ya fui</th>
+                <th>Quiero ir</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(p, i) in statsData.places" :key="p.place_id">
+                <td class="ranking-pos" :class="{ gold: i===0, silver: i===1, bronze: i===2 }">
+                  {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1 }}
+                </td>
+                <td>
+                  <div class="estrella-place-name">
+                    {{ p.place_name }}<span v-if="p.is_pueblo_magico" class="estrella-pm">PM</span>
+                  </div>
+                  <div class="estrella-state">{{ p.state_name }}</div>
+                </td>
+                <td><span class="estrella-count loved">{{ p.loved_count }}</span></td>
+                <td><span class="estrella-count visited">{{ p.visited_count }}</span></td>
+                <td><span class="estrella-count wanted">{{ p.wanted_count }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Spinner de stats mientras carga -->
+        <div v-if="statsLoading" style="text-align:center;padding:32px 0 0;">
+          <div class="loading-spinner"></div>
+        </div>
+
       </div>
 
       <!-- ─── VISTA: Por estado ─── -->
@@ -1114,7 +1327,23 @@ createApp({
     const matchSearched = ref(false)
     const rankingData    = ref([])
     const rankingLoading = ref(false)
+    const statsData      = ref({ states: [], places: [] })
+    const statsLoading   = ref(false)
     const confettiHost   = ref(null)
+
+    const statesByWanted  = computed(() => [...statsData.value.states].sort((a,b) => b.wanted_count  - a.wanted_count).slice(0, 8))
+    const statesByVisited = computed(() => [...statsData.value.states].sort((a,b) => b.visited_count - a.visited_count).slice(0, 8))
+    const statesByLoved   = computed(() => [...statsData.value.states].sort((a,b) => b.loved_count   - a.loved_count).slice(0, 8))
+    const statHighlight   = computed(() => {
+      const s = statsData.value.states
+      const p = statsData.value.places
+      return {
+        mostWanted:  [...s].sort((a,b) => b.wanted_count  - a.wanted_count)[0]  || null,
+        mostVisited: [...s].sort((a,b) => b.visited_count - a.visited_count)[0] || null,
+        mostLoved:   [...s].sort((a,b) => b.loved_count   - a.loved_count)[0]   || null,
+        starPlace:   p[0] || null,
+      }
+    })
 
     // Auth UI
     const showAuth       = ref(false)
@@ -1549,6 +1778,24 @@ createApp({
       }
     }
 
+    async function loadStats() {
+      if (statsLoading.value || statsData.value.states.length) return
+      statsLoading.value = true
+      try {
+        const [statesRes, placesRes] = await Promise.all([
+          sb.rpc('state_stats'),
+          sb.rpc('top_places', { lim: 15 })
+        ])
+        if (statesRes.error) throw statesRes.error
+        if (placesRes.error) throw placesRes.error
+        statsData.value = { states: statesRes.data || [], places: placesRes.data || [] }
+      } catch (e) {
+        console.error('stats error:', e)
+      } finally {
+        statsLoading.value = false
+      }
+    }
+
     // ─── Modal de detalle ────────────────────────────────────────
     let savedScrollY = 0
     function openPlace(p) {
@@ -1629,6 +1876,9 @@ createApp({
       matchGroupTheyVisited, matchGroupIVisited, loadMatch, copyHandle,
       // Ranking
       rankingData, rankingLoading, loadRanking,
+      // Stats
+      statsData, statsLoading, loadStats,
+      statesByWanted, statesByVisited, statesByLoved, statHighlight,
     }
   }
 }).mount('#app')

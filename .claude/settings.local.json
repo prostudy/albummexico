@@ -20,7 +20,10 @@
       "Bash(python3 *)",
       "Bash(python3 -m http.server 5173)",
       "Bash(echo \"PID: $!\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/album-mexico.html)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/album-mexico.html)",
+      "Skill(supabase:supabase)",
+      "mcp__plugin_supabase_supabase__list_projects",
+      "mcp__plugin_supabase_supabase__execute_sql"
     ]
   }
 }

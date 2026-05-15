@@ -282,6 +282,85 @@ as $$
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────
+-- 6c. FUNCIÓN RPC: estadísticas por estado
+--     Conteos públicos de wanted/visited/loved agregados por estado
+-- ─────────────────────────────────────────────────────────────────────
+
+create or replace function public.state_stats()
+returns table (
+  state_id      int,
+  state_name    text,
+  state_clave   text,
+  region        text,
+  wanted_count  bigint,
+  visited_count bigint,
+  loved_count   bigint,
+  total_count   bigint
+)
+language sql
+security invoker
+stable
+as $$
+  select
+    s.id,
+    s.name,
+    s.clave,
+    s.region,
+    count(*) filter (where ups.state = 'wanted')  as wanted_count,
+    count(*) filter (where ups.state = 'visited') as visited_count,
+    count(*) filter (where ups.state = 'loved')   as loved_count,
+    count(*)                                       as total_count
+  from public.states s
+  join public.places p on p.state_id = s.id
+  join public.user_place_states ups on ups.place_id = p.id and not ups.is_private
+  join public.profiles pr on pr.id = ups.user_id and pr.is_public
+  group by s.id, s.name, s.clave, s.region
+  order by total_count desc
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 6d. FUNCIÓN RPC: destinos más populares
+--     Top N destinos por actividad pública
+-- ─────────────────────────────────────────────────────────────────────
+
+create or replace function public.top_places(lim int default 15)
+returns table (
+  place_id         int,
+  place_name       text,
+  state_name       text,
+  state_clave      text,
+  image_url        text,
+  is_pueblo_magico boolean,
+  wanted_count     bigint,
+  visited_count    bigint,
+  loved_count      bigint,
+  total_count      bigint
+)
+language sql
+security invoker
+stable
+as $$
+  select
+    p.id,
+    p.name,
+    s.name,
+    s.clave,
+    p.image_url,
+    p.is_pueblo_magico,
+    count(*) filter (where ups.state = 'wanted')  as wanted_count,
+    count(*) filter (where ups.state = 'visited') as visited_count,
+    count(*) filter (where ups.state = 'loved')   as loved_count,
+    count(*)                                       as total_count
+  from public.places p
+  join public.states s on s.id = p.state_id
+  join public.user_place_states ups on ups.place_id = p.id and not ups.is_private
+  join public.profiles pr on pr.id = ups.user_id and pr.is_public
+  group by p.id, p.name, s.name, s.clave, p.image_url, p.is_pueblo_magico
+  order by loved_count desc, total_count desc
+  limit lim
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────
 -- 7.  SEED DE ESTADOS  (mapeo región para los 32)
 -- ─────────────────────────────────────────────────────────────────────
 
