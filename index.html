@@ -598,7 +598,7 @@
     .estrella-table th, .estrella-table td { padding: 7px 6px; font-size: 12px; }
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" defer></script>
 </head>
 <body>
 
@@ -1826,10 +1826,16 @@ createApp({
       window.addEventListener('popstate', onPop)
       window.addEventListener('keydown', onKey)
 
-      await processAuthHash()
-      await checkSession()
-      await loadContent()
-      if (user.value) await loadProfile()
+      try {
+        await processAuthHash()
+        await checkSession()
+        await loadContent()
+        if (user.value) await loadProfile()
+      } catch (e) {
+        console.error('Error al inicializar:', e)
+      } finally {
+        loading.value = false
+      }
 
       // Escuchar cambios de sesión (logout, etc.)
       // IMPORTANT: solo recargar estados en SIGNED_IN (nuevo login).
@@ -1847,8 +1853,6 @@ createApp({
         }
         // INITIAL_SESSION y TOKEN_REFRESHED: solo actualizar user.value (ya hecho arriba)
       })
-
-      loading.value = false
     })
     onBeforeUnmount(() => {
       window.removeEventListener('popstate', onPop)
