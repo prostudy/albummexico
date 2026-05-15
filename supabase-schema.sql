@@ -248,6 +248,40 @@ as $$
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────
+-- 6b. FUNCIÓN RPC: ranking de viajeros
+--     Tabla pública con conteos visited/loved/wanted por usuario
+-- ─────────────────────────────────────────────────────────────────────
+
+create or replace function public.leaderboard()
+returns table (
+  handle        text,
+  avatar_seed   text,
+  visited_count bigint,
+  loved_count   bigint,
+  wanted_count  bigint,
+  total_marked  bigint
+)
+language sql
+security invoker
+stable
+as $$
+  select
+    pr.handle,
+    pr.avatar_seed,
+    count(*) filter (where ups.state = 'visited')              as visited_count,
+    count(*) filter (where ups.state = 'loved')                as loved_count,
+    count(*) filter (where ups.state = 'wanted')               as wanted_count,
+    count(*)                                                    as total_marked
+  from public.profiles pr
+  join public.user_place_states ups on ups.user_id = pr.id
+    and not ups.is_private
+  where pr.is_public
+  group by pr.handle, pr.avatar_seed
+  order by (count(*) filter (where ups.state in ('visited','loved'))) desc,
+           total_marked desc
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────
 -- 7.  SEED DE ESTADOS  (mapeo región para los 32)
 -- ─────────────────────────────────────────────────────────────────────
 

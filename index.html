@@ -449,6 +449,57 @@
   .match-item-state { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .match-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
   .match-error { color: var(--brick); font-size: 13px; padding: 10px 0; }
+  /* ─── RANKING ─── */
+  .ranking-section { margin: 0 0 40px; }
+  .ranking-section h3 {
+    font-family: var(--display); font-size: 22px; font-weight: 500;
+    letter-spacing: -.015em; margin: 0 0 4px;
+  }
+  .ranking-section h3 em { color: var(--brick); font-style: italic; }
+  .ranking-section > p { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .ranking-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .ranking-table th {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 8px 10px;
+    text-align: left; border-bottom: 2px solid var(--line);
+  }
+  .ranking-table th:not(:first-child):not(:nth-child(2)) { text-align: center; }
+  .ranking-table td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .ranking-table td:not(:first-child):not(:nth-child(2)) { text-align: center; }
+  .ranking-table tr:last-child td { border-bottom: 0; }
+  .ranking-table tbody tr { transition: background .15s; }
+  .ranking-table tbody tr:hover { background: var(--surface-2); }
+  .ranking-pos {
+    font-family: var(--display); font-size: 18px; font-weight: 600;
+    color: var(--ink); width: 36px; text-align: center;
+  }
+  .ranking-pos.gold   { color: #D4A017; }
+  .ranking-pos.silver { color: #8A8A8A; }
+  .ranking-pos.bronze { color: #B5651D; }
+  .ranking-user { display: flex; align-items: center; gap: 10px; }
+  .ranking-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--ink); color: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .ranking-handle { font-family: var(--body); font-size: 14px; font-weight: 600; }
+  .ranking-handle.is-you { color: var(--brick); }
+  .ranking-count { font-size: 14px; font-weight: 600; }
+  .ranking-count.visited { color: var(--ink); }
+  .ranking-count.loved { color: var(--brick); }
+  .ranking-count.wanted { color: var(--gold); }
+  .ranking-total {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    background: var(--surface-2); border-radius: 8px; padding: 3px 8px;
+    display: inline-block;
+  }
+  .ranking-empty { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+  @media (max-width: 600px) {
+    .ranking-table th, .ranking-table td { padding: 8px 6px; font-size: 12px; }
+    .ranking-avatar { width: 28px; height: 28px; font-size: 11px; }
+    .ranking-handle { font-size: 12px; }
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
 </head>
@@ -513,6 +564,7 @@
         <button :class="{active: viewMode==='regions'}"  @click="viewMode='regions'">Por región</button>
         <button :class="{active: viewMode==='all'}"      @click="viewMode='all'">Todo</button>
         <button :class="{active: viewMode==='map'}"      @click="viewMode='map'">Mapa</button>
+        <button :class="{active: viewMode==='ranking'}" @click="viewMode='ranking'; loadRanking()">Ranking</button>
       </div>
 
       <!-- State filters (when in "all" mode) -->
@@ -703,6 +755,53 @@
         </div>
 
       </div><!-- /vista mapa -->
+
+      <!-- ─── VISTA: Ranking ─── -->
+      <div v-if="viewMode==='ranking'" class="ranking-section">
+        <h3>Ranking de <em>viajeros</em></h3>
+        <p>Los exploradores más activos del Álbum México.</p>
+
+        <div v-if="rankingLoading" style="text-align:center;padding:40px;">
+          <div class="loading-spinner"></div>
+        </div>
+
+        <table v-else-if="rankingData.length" class="ranking-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Viajero</th>
+              <th>Ya fui</th>
+              <th>La amé</th>
+              <th>Quiero ir</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(r, i) in rankingData" :key="r.handle">
+              <td class="ranking-pos" :class="{ gold: i===0, silver: i===1, bronze: i===2 }">
+                {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1 }}
+              </td>
+              <td>
+                <div class="ranking-user">
+                  <div class="ranking-avatar">{{ r.handle.slice(0,2).toUpperCase() }}</div>
+                  <span class="ranking-handle" :class="{ 'is-you': userProfile && r.handle === userProfile.handle }">
+                    {{ r.handle }}
+                    <span v-if="userProfile && r.handle === userProfile.handle" style="font-size:11px;opacity:.6;"> (tú)</span>
+                  </span>
+                </div>
+              </td>
+              <td><span class="ranking-count visited">{{ r.visited_count }}</span></td>
+              <td><span class="ranking-count loved">{{ r.loved_count }}</span></td>
+              <td><span class="ranking-count wanted">{{ r.wanted_count }}</span></td>
+              <td><span class="ranking-total">{{ r.total_marked }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div v-else class="ranking-empty">
+          Aún no hay viajeros con lugares marcados.
+        </div>
+      </div>
 
       <!-- ─── VISTA: Por estado ─── -->
       <div v-if="viewMode==='states'">
@@ -997,7 +1096,7 @@ createApp({
     const places         = ref([])      // [{ id, state_id, name, image_url, ... }]
     const userStates     = reactive({}) // { place_id: { state, visited_at } }
     const anonState      = reactive(loadAnon())
-    const viewMode       = ref('states')   // states | pm | regions | all | map
+    const viewMode       = ref('states')   // states | pm | regions | all | map | ranking
     const filter         = ref('all')
     const selectedPlace  = ref(null)
 
@@ -1013,6 +1112,8 @@ createApp({
     const matchResults  = ref([])
     const matchError    = ref('')
     const matchSearched = ref(false)
+    const rankingData    = ref([])
+    const rankingLoading = ref(false)
     const confettiHost   = ref(null)
 
     // Auth UI
@@ -1083,6 +1184,7 @@ createApp({
       const id = place.id
       if (toggleInFlight.has(id)) return
       toggleInFlight.add(id)
+      const safety = setTimeout(() => toggleInFlight.delete(id), 8000)
       try {
         try { if (navigator.vibrate) navigator.vibrate(12) } catch {}
         const current = userStates[id]?.state ||
@@ -1130,7 +1232,11 @@ createApp({
             showToast(`¡${v} lugares visitados! 🎉`)
           }
         }
+      } catch (e) {
+        console.error('toggle error:', e)
+        showToast('No se pudo guardar el cambio')
       } finally {
+        clearTimeout(safety)
         toggleInFlight.delete(id)
       }
     }
@@ -1428,6 +1534,21 @@ createApp({
       }
     }
 
+    // ─── Ranking ──────────────────────────────────────────────────
+    async function loadRanking() {
+      if (rankingLoading.value || rankingData.value.length) return
+      rankingLoading.value = true
+      try {
+        const { data, error } = await sb.rpc('leaderboard')
+        if (error) throw error
+        rankingData.value = data || []
+      } catch (e) {
+        console.error('leaderboard error:', e)
+      } finally {
+        rankingLoading.value = false
+      }
+    }
+
     // ─── Modal de detalle ────────────────────────────────────────
     let savedScrollY = 0
     function openPlace(p) {
@@ -1506,6 +1627,8 @@ createApp({
       // Match
       userProfile, friendHandle, matchLoading, matchResults, matchError, matchSearched,
       matchGroupTheyVisited, matchGroupIVisited, loadMatch, copyHandle,
+      // Ranking
+      rankingData, rankingLoading, loadRanking,
     }
   }
 }).mount('#app')
