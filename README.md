@@ -6,13 +6,41 @@ Pasaporte digital de viajero: marca los 32 estados y ~310 destinos de México co
 
 ---
 
+## Changelog
+
+### 2026-05-14
+
+#### ✦ Ranking de viajeros
+Nueva pestaña **Ranking** con tabla pública de los exploradores más activos. Muestra conteos de "ya fui", "la amé", "quiero ir" y total por usuario, ordenados por actividad. RPC nueva: `leaderboard()`.
+
+#### ✦ Estadísticas globales de estados y destinos
+Sección de estadísticas debajo del ranking con:
+- **4 tarjetas de resumen**: estado más deseado, más visitado, más amado, y destino estrella.
+- **3 tablas de estados** (top 8): más destinos deseados / visitados / amados.
+- **Tabla "Destinos estrella"**: top 15 destinos ordenados por "la amé", con columnas visited/wanted y badge PM para Pueblos Mágicos.
+
+RPCs nuevas en Supabase: `state_stats()` y `top_places(lim int)`.
+
+#### ✦ Fix: spinner de carga nunca se queda pegado
+`onMounted` ahora envuelve toda la inicialización en `try/finally`, garantizando que `loading = false` siempre corre aunque haya un error de red o de sesión expirada. El script de `html2canvas` pasó a `defer` para no bloquear el parse inicial del HTML.
+
+**Causa raíz detectada:** al resetear la base de datos, usuarios con JWT en caché intentaban refrescar un token de una cuenta ya eliminada — sin el `try/finally`, ese error silencioso dejaba el spinner pegado en producción.
+
+#### ✦ View toggle responsive en mobile
+En pantallas ≤ 600 px el toggle de vistas cambia de un pill único (que cortaba el scroll con las esquinas redondeadas) a chips individuales con scroll horizontal limpio, scrollbar oculto y extensión hasta los bordes de la pantalla.
+
+#### ✦ Dominio de producción actualizado
+Producción apunta a `https://yafui.guru` (antes `albummexico.pages.dev`). CORS de la Edge Function actualizado al nuevo dominio.
+
+---
+
 ## Arquitectura de producción
 
 ```
 Usuario
   │
   ▼
-Cloudflare Pages          ← album-mexico.html (CDN global, gratis)
+Cloudflare Pages          ← index.html (CDN global, gratis)
   │
   ├── API calls ──────►  Supabase              ← Postgres + RLS + Auth
   │                        └─ Edge Function    ← send-magic-link (Deno)
@@ -106,16 +134,13 @@ El proyecto se subió directamente como archivo estático, sin conectar GitHub n
 2. En la pantalla "Ship something new" → **Upload your static files**
    - ⚠️ Si no ves esa opción, busca al fondo de la pantalla el link **"Looking to deploy Pages? Get started"**
    - No usar "Continue with GitHub" desde esa pantalla — crea un proyecto Workers, no Pages
-3. El archivo en el repo se llama `album-mexico.html` — **renombrarlo a `index.html`** antes de subir
-   - Sin este renombre, la raíz `/` devuelve 404
-4. Arrastrar `index.html` al uploader → **Deploy site**
-5. En ~30 segundos el sitio queda live en `https://albummexico.pages.dev` (custom domain: `https://yafui.guru`)
+3. Arrastrar `index.html` al uploader → **Deploy site**
+4. En ~30 segundos el sitio queda live en `https://albummexico.pages.dev` (custom domain: `https://yafui.guru`)
 
 ### Para futuros deploys (cuando cambies el HTML)
 
-1. Renombrar `album-mexico.html` → `index.html`
-2. Cloudflare Pages → proyecto `albummexico` → **Create new deployment**
-3. Arrastrar el nuevo `index.html`
+1. Cloudflare Pages → proyecto `albummexico` → **Create new deployment**
+2. Arrastrar el `index.html`
 
 ### Opción alternativa — GitHub (para deploys automáticos)
 
@@ -225,8 +250,8 @@ supabase secrets set FROM_ADDRESS=hola@yafui.guru
 
 | Variable | Dónde se usa | Dónde se obtiene |
 |---|---|---|
-| `SUPABASE_URL` | `album-mexico.html` (hardcodeado) | Supabase → Settings → API |
-| `SUPABASE_ANON_KEY` | `album-mexico.html` (hardcodeado) | Supabase → Settings → API |
+| `SUPABASE_URL` | `index.html` (hardcodeado) | Supabase → Settings → API |
+| `SUPABASE_ANON_KEY` | `index.html` (hardcodeado) | Supabase → Settings → API |
 | `SUPABASE_SERVICE_KEY` | Scripts de seed/migración | Supabase → Settings → API |
 | `RESEND_API_KEY` | Supabase Edge Function (secret) | Resend → API Keys |
 | `REDIRECT_URL` | Supabase Edge Function (secret) | Tu URL de Cloudflare Pages |
@@ -243,7 +268,7 @@ supabase secrets set FROM_ADDRESS=hola@yafui.guru
 
 ```
 album_cdmx/
-├── album-mexico.html      ← Toda la app (Vue CDN, CSS, JS en un archivo)
+├── index.html             ← Toda la app (Vue CDN, CSS, JS en un archivo)
 ├── escapadas-index.json   ← Fuente de datos original (~310 destinos)
 ├── supabase-schema.sql    ← Schema completo (idempotente, corre en SQL Editor)
 ├── seed-places.mjs        ← Carga los destinos del JSON a Supabase
@@ -259,13 +284,16 @@ album_cdmx/
 ### Schema de la base de datos
 
 ```
-states          → 32 estados con región, coords, imagen
-places          → ~310 destinos (vinculados a state)
-profiles        → usuario (handle único auto-generado, avatar seed)
-user_place_states → (user_id, place_id) → 'wanted' | 'visited' | 'loved'
+states              → 32 estados con región, coords, imagen
+places              → ~310 destinos (vinculados a state)
+profiles            → usuario (handle único auto-generado, avatar seed)
+user_place_states   → (user_id, place_id) → 'wanted' | 'visited' | 'loved'
 
-Vista:   place_stats      → conteos wanted/visited/loved + trending_24h
-Función: match_with_user  → "N lugares en común con @amigo"
+Vista:    place_stats      → conteos wanted/visited/loved + trending_24h
+Función:  match_with_user  → "N lugares en común con @amigo"
+Función:  leaderboard()    → ranking público de viajeros por actividad
+Función:  state_stats()    → conteos agregados por estado (todos los usuarios)
+Función:  top_places(lim)  → top N destinos más marcados como 'loved'
 ```
 
 ---
